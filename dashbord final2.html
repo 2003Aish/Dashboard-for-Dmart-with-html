@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sales Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/autoNumeric@4.5.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f8; /* Light gray background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header Styling */
+        header {
+            background-color: #2c3e50; /* Dark blue header */
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Container for Content */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            align-items: center;
+        }
+
+        .filter-section label {
+            font-weight: 500;
+            color: #495057;
+            margin-right: 0.5rem;
+        }
+
+        .filter-section select, .filter-section input[type="date"] {
+            padding: 0.7rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            width: 180px;
+            box-sizing: border-box; /* Include padding and border in element's total width and height */
+        }
+
+        .filter-section select:focus, .filter-section input[type="date"]:focus {
+            outline: none;
+            border-color: #3498db; /* Highlight color */
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        /* Sales Metrics Section */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+            border-left: 5px solid #27ae60; /* Green accent */
+        }
+
+        .metric:hover {
+            transform: scale(1.02);
+        }
+
+        .metric h4 {
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .metric h3 {
+            color: #27ae60;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        /* Cards for Visualizations */
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h2 {
+            color: #343a40;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-top: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        table th, table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        /* Upload Button */
+        .upload-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upload-button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: #3498db; /* Highlight color */
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+            border: none;
+        }
+
+        .upload-button:hover {
+            background-color: #2980b9;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Footer Styling */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: #343a40;
+            color: #adb5bd;
+            border-radius: 8px 8px 0 0;
+            margin-top: 2rem;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        /* Chart Canvas */
+        canvas {
+            max-width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Added Styling for Dropdown Menu */
+        .filter-section .select-group {
+            display: flex;
+            flex-direction: column;
+            margin-right: 1rem;
+            margin-bottom: 0.5rem; /* Add some margin to the bottom for spacing */
+        }
+
+        .filter-section .select-group label {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Added styling for the second chart */
+        #secondChartContainer {
+            margin-top: 2rem; /* Add space above the chart */
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📊 Sales Dashboard</h1>
+        <p>Group Members: Aishwarya Tripathi, Prince Sahu, Shubhi Agnihotri, Rajdeep Patil</p>
+    </header>
+
+    <div class="container">
+        <div class="upload-section">
+            <label for="fileInput" class="upload-button">⬆️ Upload Sales Data (CSV)</label>
+            <input type="file" id="fileInput" accept=".csv">
+        </div>
+
+        <div class="filter-section">
+            <div class="select-group">
+                <label for="categoryFilter">Category:</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="regionFilter">Region:</label>
+                <select id="regionFilter">
+                    <option value="all">All Regions</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="stateFilter">State:</label>
+                <select id="stateFilter">
+                    <option value="all">All States</option>
+                </select>
+            </div>
+            <div class="select-group">
+                <label for="dateFilter">Order Date:</label>
+                <input type="date" id="dateFilter" />
+            </div>
+        </div>
+
+        <div class="metrics">
+            <div class="metric">
+                <h4>Total Sales</h4>
+                <h3 id="totalSales">$0.00</h3>
+            </div>
+            <div class="metric">
+                <h4>Total Profit</h4>
+                <h3 id="totalProfit">$0.00</h3>
+            </div>
+            <div class="metric">
+                <h4>Average Discount</h4>
+                <h3 id="avgDiscount">0%</h3>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Sales by Category</h2>
+            <canvas id="salesByCategoryChart"></canvas>
+        </div>
+
+        <div class="card" id="secondChartContainer">
+            <h2>Sales by Region</h2>
+            <canvas id="salesByRegionChart"></canvas>
+        </div>
+
+        <div class="card">
+            <h2>Sample Data Entries</h2>
+            <div id="sampleDataEntries">
+                <p>Please upload a CSV file to view data entries.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Sales Analytics | Group Project</p>
+    </footer>
+
+    <script>
+        let salesData = [];
+        let currentSalesData = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const regionFilter = document.getElementById('regionFilter');
+        const stateFilter = document.getElementById('stateFilter');
+        const dateFilter = document.getElementById('dateFilter');
+        const sampleDataEntriesDiv = document.getElementById('sampleDataEntries');
+        const totalSalesElement = document.getElementById('totalSales');
+        const totalProfitElement = document.getElementById('totalProfit');
+        const avgDiscountElement = document.getElementById('avgDiscount');
+        const salesByCategoryChartCanvas = document.getElementById('salesByCategoryChart');
+        const salesByRegionChartCanvas = document.getElementById('salesByRegionChart');
+        let salesByCategoryChart, salesByRegionChart;
+
+        // --- New functions to handle data from the Excel file ---
+        function loadExcelData(data) {
+            salesData = data;
+            processData(salesData);
+        }
+
+
+        fileInput.addEventListener('change', handleFile);
+        categoryFilter.addEventListener('change', applyFilters);
+        regionFilter.addEventListener('change', applyFilters);
+        stateFilter.addEventListener('change', applyFilters);
+        dateFilter.addEventListener('change', applyFilters);
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                Papa.parse(file, {
+                    header: true,
+                    dynamicTyping: true,
+                    complete: function(results) {
+                        salesData = results.data.filter(row => Object.keys(row).length > 1); // Filter out empty rows
+                        processData(salesData);
+                    },
+                    error: function(error) {
+                        console.error("Error parsing CSV:", error);
+                        alert("Failed to parse CSV file.");
+                    }
+                });
+            }
+        }
+
+        function processData(data) {
+            if (!data || data.length === 0) {
+                alert('No valid data found in the CSV file.');
+                return;
+            }
+
+            // Assuming the CSV header matches the provided image
+            const normalizedData = data.map(item => ({
+                order_id: item['Order ID'],
+                customer: item['Customer'],
+                category: item['Category'],
+                sub_category: item['Sub-Category'],
+                city: item['City'],
+                order_date: parseDate(item['Order Date']),
+                region: item['Region'],
+                sales: item['Sales'],
+                discount: item['Discount'],
+                profit: item['Profit'],
+                state: item['State']
+            })).filter(item => item.order_id && item.category && item.region && item.sales !== undefined && item.profit !== undefined && item.discount !== undefined);
+
+
+            salesData = normalizedData;
+            populateFilters();
+            applyFilters();
+            displaySampleEntries(salesData.slice(0, 5));
+        }
+
+        function parseDate(dateString) {
+            if (dateString instanceof Date) {
+                return dateString;
+            }
+            const parsedDate = new Date(dateString);
+            return isNaN(parsedDate) ? null : parsedDate;
+        }
+
+        function populateFilters() {
+            const categories = [...new Set(salesData.map(item => item.category).filter(Boolean))].sort();
+            const regions = [...new Set(salesData.map(item => item.region).filter(Boolean))].sort();
+            const states = [...new Set(salesData.map(item => item.state).filter(Boolean))].sort();
+
+            // Clear existing options
+            categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+            regionFilter.innerHTML = '<option value="all">All Regions</option>';
+            stateFilter.innerHTML = '<option value="all">All States</option>';
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                categoryFilter.appendChild(option);
+            });
+
+            regions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionFilter.appendChild(option);
+            });
+
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state;
+                option.textContent = state;
+                stateFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            currentSalesData = [...salesData];
+
+            const selectedCategory = categoryFilter.value;
+            const selectedRegion = regionFilter.value;
+            const selectedState = stateFilter.value;
+            const selectedDate = dateFilter.value;
+
+            if (selectedCategory !== 'all') {
+                currentSalesData = currentSalesData.filter(item => item.category === selectedCategory);
+            }
+
+            if (selectedRegion !== 'all') {
+                currentSalesData = currentSalesData.filter(item => item.region === selectedRegion);
+            }
+
+            if (selectedState !== 'all') {
+                currentSalesData = currentSalesData.filter(item => item.state === selectedState);
+            }
+
+            if (selectedDate) {
+                currentSalesData = currentSalesData.filter(item => item.order_date && item.order_date.toISOString().slice(0, 10) === selectedDate);
+            }
+
+            updateMetrics(currentSalesData);
+            renderSalesByCategoryChart(currentSalesData);
+            renderSalesByRegionChart(currentSalesData);
+            displaySampleEntries(currentSalesData.slice(0, 5));
+        }
+
+        function updateMetrics(data) {
+            if (data.length === 0) {
+                totalSalesElement.textContent = '$0.00';
+                totalProfitElement.textContent = '$0.00';
+                avgDiscountElement.textContent = '0%';
+                return;
+            }
+
+            const totalSales = data.reduce((sum, item) => sum + (item.sales || 0), 0);
+            const totalProfit = data.reduce((sum, item) => sum + (item.profit || 0), 0);
+            const totalDiscount = data.reduce((sum, item) => sum + (item.discount || 0), 0);
+            const avgDiscount = data.length > 0 ? (totalDiscount / data.length * 100).toFixed(2) : 0;
+
+            totalSalesElement.textContent = '$' + totalSales.toFixed(2);
+            totalProfitElement.textContent = '$' + totalProfit.toFixed(2);
+            avgDiscountElement.textContent = avgDiscount + '%';
+        }
+
+        function renderSalesByCategoryChart(data) {
+            const categorySales = data.reduce((acc, item) => {
+                const category = item.category || 'Unknown';
+                acc[category] = (acc[category] || 0) + (item.sales || 0);
+                return acc;
+            }, {});
+
+            const labels = Object.keys(categorySales);
+            const values = Object.values(categorySales);
+            const backgroundColors = generateChartColors(labels.length);
+
+            if (salesByCategoryChart) {
+                salesByCategoryChart.destroy();
+            }
+
+            salesByCategoryChart = new Chart(salesByCategoryChartCanvas, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sales by Category',
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: {
+                            display: true,
+                            text: 'Sales Distribution by Category'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSalesByRegionChart(data) {
+            const regionSales = data.reduce((acc, item) => {
+                const region = item.region || 'Unknown';
+                acc[region] = (acc[region] || 0) + (item.sales || 0);
+                return acc;
+            }, {});
+
+            const labels = Object.keys(regionSales);
+            const values = Object.values(regionSales);
+            const backgroundColors = generateChartColors(labels.length);
+
+            if (salesByRegionChart) {
+                salesByRegionChart.destroy();
+            }
+
+            salesByRegionChart = new Chart(salesByRegionChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sales by Region',
+                        data: values,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Region'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Sales'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Sales Distribution by Region'
+                        }
+                    }
+                }
+            });
+        }
+
+        function displaySampleEntries(data) {
+            sampleDataEntriesDiv.innerHTML = ''; // Clear existing content
+            if (data.length === 0) {
+                sampleDataEntriesDiv.innerHTML = '<p>No data available to display.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create table header
+            const headerRow = document.createElement('tr');
+            ['Order ID', 'Customer', 'Category', 'Sub-Category', 'City', 'Order Date', 'Region', 'Sales', 'Discount', 'Profit', 'State'].forEach(text => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create table rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.insertCell().textContent = item.order_id || '-';
+                row.insertCell().textContent = item.customer || '-';
+                row.insertCell().textContent = item.category || '-';
+                row.insertCell().textContent = item.sub_category || '-';
+                row.insertCell().textContent = item.city || '-';
+                row.insertCell().textContent = item.order_date ? item.order_date.toLocaleDateString() : '-';
+                row.insertCell().textContent = item.region || '-';
+                row.insertCell().textContent = item.sales ? '$' + item.sales.toFixed(2) : '-';
+                row.insertCell().textContent = item.discount ? item.discount.toFixed(2) + '%' : '-';
+                row.insertCell().textContent = item.profit ? '$' + item.profit.toFixed(2) : '-';
+                row.insertCell().textContent = item.state || '-';
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+            sampleDataEntriesDiv.appendChild(table);
+        }
+
+        function generateChartColors(numColors) {
+            const colors = [];
+            for (let i = 0; i < numColors; i++) {
+                const hue = (360 / numColors) * i;
+                colors.push(`hsl(${hue}, 70%, 60%)`);
+            }
+            return colors;
+        }
+
+        // --- Load and process the Excel data ---
+        // Load the Excel file using pandas (imported via a script tag)
+        const excelFilePath = 'sales_dashboard_data.xlsx'; //hardcoded excel file name
+
+        fetch(excelFilePath)
+            .then(response => response.arrayBuffer())
+            .then(buffer => {
+                const data = new Uint8Array(buffer);
+                let workbook;
+                try {
+                    workbook = XLSX.read(data, { type: 'array' });
+                } catch (error) {
+                    console.error("Error reading Excel file:", error);
+                    alert("Error reading Excel file. Please make sure it is a valid .xlsx file.");
+                    return;
+                }
+                const sheetName = workbook.SheetNames[0];  //get the first sheet
+                const worksheet = workbook.Sheets[sheetName];
+                const excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' }); // Raw numbers and formatted dates
+
+                //convert excelData to the expected format
+                const headers = excelData[0];  // Get the headers
+                const formattedData = excelData.slice(1).map(row => { //start from the second row to skip headers
+                    const item = {};
+                    headers.forEach((header, index) => {
+                        item[header] = row[index];
+                    });
+                    return item;
+                });
+                loadExcelData(formattedData);
+            })
+            .catch(error => {
+                console.error("Error fetching Excel file:", error);
+                alert("Failed to fetch Excel file.  Ensure it is named 'sales_dashboard_data.xlsx' and is in the same directory.");
+            });
+
+    </script>
+</body>
+</html>

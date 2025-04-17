@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=3.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>good morning everyone</h1> 
+    <p> this website is about the visual representation of the D-mart dashbord</p> 
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Updated background with image and styling */
+            background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e'); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh; /* Ensure full viewport height */
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            /* Adjusted container to work with full height body */
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="container mx-auto bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-6 text-center">Sales Dashboard</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+                <label for="store-filter" class="block text-gray-700 text-sm font-bold mb-2">Filter by Store:</label>
+                <select id="store-filter" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="">All Stores</option>
+                    <option value="New York">New York</option>
+                    <option value="Los Angeles">Los Angeles</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="Houston">Houston</option>
+                </select>
+            </div>
+            <div>
+                <label for="start-date" class="block text-gray-700 text-sm font-bold mb-2">Start Date:</label>
+                <input type="date" id="start-date" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div>
+                <label for="end-date" class="block text-gray-700 text-sm font-bold mb-2">End Date:</label>
+                <input type="date" id="end-date" class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Total Sales</h2>
+                <div id="total-sales" class="text-2xl font-bold text-blue-500"></div>
+                <p class="text-gray-500 text-sm mt-1">Total quantity of products sold across all transactions.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Average Transaction Value</h2>
+                <div id="average-transaction-value" class="text-2xl font-bold text-purple-500"></div>
+                <p class="text-gray-500 text-sm mt-1">Total revenue divided by the number of transactions.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Sales Over Time</h2>
+                <div id="sales-over-time-chart"></div>
+                <p class="text-gray-500 text-sm mt-1">Trend of sales (units sold) over time.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Sales by Category</h2>
+                <div id="sales-by-category"></div>
+                <p class="text-gray-500 text-sm mt-1">Distribution of sales across product categories.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Top Selling Products</h2>
+                <div id="top-products"></div>
+                 <p class="text-gray-500 text-sm mt-1">Top 5 products with the highest sales quantity.</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Sales by Region</h2>
+                <div id="sales-by-region"></div>
+                <p class="text-gray-500 text-sm mt-1">Sales distribution across store locations.</p>
+            </div>
+             <div class="bg-white rounded-lg shadow-sm p-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Product Details</h2>
+                <div id="product-details">
+                    <ul class="list-disc list-inside">
+                        <li><strong>P001:</strong> T-Shirt - Apparel</li>
+                        <li><strong>P002:</strong> Socks - Apparel</li>
+                        <li><strong>P003:</strong> Laptop - Electronics</li>
+                        <li><strong>P004:</strong> Mouse - Electronics</li>
+                        <li><strong>P005:</strong> Chair - Furniture</li>
+                        <li><strong>P006:</strong> Jeans - Apparel</li>
+                        <li><strong>P007:</strong> Hoodie - Apparel</li>
+                        <li><strong>P008:</strong> Desk - Furniture</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="mt-8 p-4 bg-gray-50 rounded-lg shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Dashboard Description</h2>
+            <p class="text-gray-600 text-sm">
+                This dashboard provides a comprehensive overview of sales performance, key metrics, and product insights. It allows users to track total sales, average transaction value, sales trends, category performance, and top-selling products.  The data can be filtered by store location and date range for more granular analysis.
+            </p>
+        </div>
+
+        <div class="mt-8 p-4 bg-gray-50 rounded-lg shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-700 mb-2">Group Members</h2>
+            <ul class="list-disc list-inside text-gray-600 text-sm">
+                <li>Aishwarya Tripathi 22BEY10029</li>
+                <li>Prince Sahu</li>
+                <li>Your Name 4</li>
+                <li>Your Name 5</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Sample dataset (replace with your actual data)
+        const transactions = [
+            { transaction_id: 1, customer_id: 101, transaction_date: '2024-01-01', total_amount: 150, store_location: 'New York', payment_method: 'Credit Card', items: [{ product_id: 'P001', quantity: 2, unit_price: 50 }, { product_id: 'P002', quantity: 1, unit_price: 50 }] },
+            { transaction_id: 2, customer_id: 102, transaction_date: '2024-01-05', total_amount: 200, store_location: 'Los Angeles', payment_method: 'PayPal', items: [{ product_id: 'P003', quantity: 1, unit_price: 100 }, { product_id: 'P004', quantity: 2, unit_price: 50 }] },
+            { transaction_id: 3, customer_id: 101, transaction_date: '2024-01-10', total_amount: 100, store_location: 'New York', payment_method: 'Credit Card', items: [{ product_id: 'P001', quantity: 1, unit_price: 50 }, { product_id: 'P002', quantity: 1, unit_price: 50 }] },
+            { transaction_id: 4, customer_id: 103, transaction_date: '2024-01-15', total_amount: 300, store_location: 'Chicago', payment_method: 'PayPal', items: [{ product_id: 'P005', quantity: 3, unit_price: 100 }] },
+            { transaction_id: 5, customer_id: 102, transaction_date: '2024-01-20', total_amount: 250, store_location: 'Los Angeles', payment_method: 'Credit Card', items: [{ product_id: 'P003', quantity: 2, unit_price: 100 }, { product_id: 'P004', quantity: 1, unit_price: 50 }] },
+            { transaction_id: 6, customer_id: 104, transaction_date: '2024-02-01', total_amount: 180, store_location: 'New York', payment_method: 'PayPal', items: [{ product_id: 'P001', quantity: 1, unit_price: 50 }, { product_id: 'P006', quantity: 1, unit_price: 80 }, {product_id: 'P007', quantity: 1, unit_price: 50 }] },
+            { transaction_id: 7, customer_id: 103, transaction_date: '2024-02-05', total_amount: 220, store_location: 'Chicago', payment_method: 'Credit Card', items: [{ product_id: 'P005', quantity: 2, unit_price: 100 }, {product_id: 'P002', quantity: 2, unit_price: 10 }] },
+            { transaction_id: 8, customer_id: 105, transaction_date: '2024-02-10', total_amount: 320, store_location: 'Houston', payment_method: 'PayPal', items: [{ product_id: 'P003', quantity: 1, unit_price: 100 }, { product_id: 'P004', quantity: 1, unit_price: 50 }, {product_id: 'P008', quantity: 1, unit_price: 120 }] },
+            { transaction_id: 9, customer_id: 101, transaction_date: '2024-02-15', total_amount: 170, store_location: 'New York', payment_method: 'Credit Card', items: [{ product_id: 'P001', quantity: 3, unit_price: 50 }, {product_id: 'P002', quantity: 1, unit_price: 20 }] },
+            { transaction_id: 10, customer_id: 104, transaction_date: '2024-02-20', total_amount: 210, store_location: 'Chicago', payment_method: 'PayPal', items: [{ product_id: 'P006', quantity: 2, unit_price: 80 }, {product_id: 'P007', quantity: 1, unit_price: 50 }] },
+        ];
+
+        const products = [
+            { product_id: 'P001', product_name: 'T-Shirt', category: 'Apparel', unit_price: 50, stock_quantity: 100 },
+            { product_id: 'P002', product_name: 'Socks', category: 'Apparel', unit_price: 10, stock_quantity: 200 },
+            { product_id: 'P003', product_name: 'Laptop', category: 'Electronics', unit_price: 1000, stock_quantity: 50 },
+            { product_id: 'P004', product_name: 'Mouse', category: 'Electronics', unit_price: 25, stock_quantity: 150 },
+            { product_id: 'P005', product_name: 'Chair', category: 'Furniture', unit_price: 120, stock_quantity: 60 },
+            { product_id: 'P006', product_name: 'Jeans', category: 'Apparel', unit_price: 80, stock_quantity: 120 },
+            { product_id: 'P007', product_name: 'Hoodie', category: 'Apparel', unit_price: 50, stock_quantity: 100 },
+            { product_id: 'P008', product_name: 'Desk', category: 'Furniture', unit_price: 300, stock_quantity: 40 },
+        ];
+
+        // Function to calculate key metrics with filtering
+        function calculateMetrics(transactions, storeFilter, startDate, endDate) {
+            let filteredTransactions = transactions;
+
+            if (storeFilter) {
+                filteredTransactions = filteredTransactions.filter(transaction => transaction.store_location === storeFilter);
+            }
+
+            if (startDate) {
+                const start = new Date(startDate);
+                filteredTransactions = filteredTransactions.filter(transaction => new Date(transaction.transaction_date) >= start);
+            }
+
+            if (endDate) {
+                const end = new Date(endDate);
+                filteredTransactions = filteredTransactions.filter(transaction => new Date(transaction.transaction_date) <= end);
+            }
+
+            const totalSales = filteredTransactions.reduce((sum, transaction) =>
+                sum + transaction.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+
+            const averageTransactionValue = filteredTransactions.length > 0
+                ? filteredTransactions.reduce((sum, transaction) => sum + transaction.total_amount, 0) / filteredTransactions.length
+                : 0;
+
+            return { totalSales, averageTransactionValue };
+        }
+
+        // Function to prepare chart data with filtering
+        function prepareChartData(transactions, storeFilter, startDate, endDate) {
+             let filteredTransactions = transactions;
+
+            if (storeFilter) {
+                filteredTransactions = filteredTransactions.filter(transaction => transaction.store_location === storeFilter);
+            }
+
+            if (startDate) {
+                const start = new Date(startDate);
+                filteredTransactions = filteredTransactions.filter(transaction => new Date(transaction.transaction_date) >= start);
+            }
+
+            if (endDate) {
+              const end = new Date(endDate);
+              filteredTransactions = filteredTransactions.filter(transaction => new Date(transaction.transaction_date) <= end);
+            }
+
+            const salesByMonth = {};
+            filteredTransactions.forEach(transaction => {
+                const month = transaction.transaction_date.substring(0, 7);
+                  const totalItemsSold = transaction.items.reduce((sum, item) => sum + item.quantity, 0);
+                if (salesByMonth[month]) {
+                    salesByMonth[month] += totalItemsSold;
+                } else {
+                    salesByMonth[month] = totalItemsSold;
+                }
+            });
+
+            const monthlySalesData = Object.entries(salesByMonth).map(([month, sales]) => ({
+                month,
+                sales
+            }));
+
+            const salesByCategoryData = {};
+             filteredTransactions.forEach(transaction => {
+                transaction.items.forEach(item => {
+                    const product = products.find(p => p.product_id === item.product_id);
+                    if (product) {
+                        if (salesByCategoryData[product.category]) {
+                            salesByCategoryData[product.category] += item.quantity;
+                        } else {
+                            salesByCategoryData[product.category] = item.quantity;
+                        }
+                    }
+                });
+            });
+
+            const categorySalesData = Object.entries(salesByCategoryData).map(([category, sales]) => ({
+                category,
+                sales
+            }));
+
+            const productSales = {};
+            filteredTransactions.forEach(transaction => {
+                transaction.items.forEach(item => {
+                     const product = products.find(p => p.product_id === item.product_id);
+                    if (product) {
+                        if (productSales[product.product_name]) {
+                            productSales[product.product_name] += item.quantity;
+                        } else {
+                            productSales[product.product_name] = item.quantity;
+                        }
+                    }
+                });
+            });
+            const sortedProductSales = Object.entries(productSales).sort(([, a], [, b]) => b - a);
+            const topSellingProductsData = sortedProductSales.slice(0, 5).map(([product, quantity]) => ({
+                product,
+                quantity
+            }));
+
+            const salesByRegionData = {};
+            filteredTransactions.forEach(transaction => {
+                if (salesByRegionData[transaction.store_location]) {
+                    salesByRegionData[transaction.store_location] += transaction.items.reduce((sum, item) => sum + item.quantity, 0);
+                } else {
+                    salesByRegionData[transaction.store_location] = transaction.items.reduce((sum, item) => sum + item.quantity, 0);
+                }
+            });
+            const regionSalesData = Object.entries(salesByRegionData).map(([region, sales]) => ({
+                region,
+                sales
+            }));
+
+            return { monthlySalesData, categorySalesData, topSellingProductsData, regionSalesData };
+        }
+
+        // Render charts (ApexCharts)
+        let salesOverTimeChart;
+        let salesByCategoryChart;
+        let topSellingProductsChart;
+        let salesByRegionChart;
+
+        function renderCharts(transactions, storeFilter, startDate, endDate) {
+            const { monthlySalesData, categorySalesData, topSellingProductsData, regionSalesData } = prepareChartData(transactions, storeFilter, startDate, endDate);
+             const { totalSales, averageTransactionValue } = calculateMetrics(transactions, storeFilter, startDate, endDate);
+
+            // Display key metrics
+            document.getElementById('total-sales').textContent = totalSales;
+            document.getElementById('average-transaction-value').textContent = averageTransactionValue.toFixed(2);
+
+            if (!salesOverTimeChart) {
+                salesOverTimeChart = new ApexCharts(document.getElementById('sales-over-time-chart'), {
+                    chart: {
+                        type: 'line',
+                        height: 300,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'Sales',
+                        data: monthlySalesData.map(item => ({ x: item.month, y: item.sales }))
+                    }],
+                    xaxis: {
+                        type: 'category',
+                         title: {
+                            text: 'Month',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Sales (Units)',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    colors: ['#6b7280'], // Tailwind gray-500
+                    dataLabels: {
+                        enabled: false
+                    },
+                    stroke: {
+                        curve: 'smooth'
+                    },
+                    grid: {
+                        borderColor: '#e5e7eb', // Tailwind gray-200
+                        row: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                        column: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'yyyy-MM'
+                        },
+                        y: {
+                            formatter: (value) => `${value}`
+                        }
+                    },
+                });
+                salesOverTimeChart.render();
+            } else {
+                salesOverTimeChart.updateOptions({
+                    series: [{
+                        name: 'Sales',
+                        data: monthlySalesData.map(item => ({ x: item.month, y: item.sales }))
+                    }],
+                    xaxis: {
+                        categories: monthlySalesData.map(item => item.month)
+                    }
+                });
+            }
+
+            if (!salesByCategoryChart) {
+                salesByCategoryChart = new ApexCharts(document.getElementById('sales-by-category'), {
+                    chart: {
+                        type: 'pie',
+                        height: 300,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    series: categorySalesData.map(item => item.sales),
+                    labels: categorySalesData.map(item => item.category),
+                    colors: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'], // Tailwind colors: amber-500, emerald-500, blue-500, violet-500
+                    legend: {
+                        position: 'bottom',
+                         fontFamily: 'Inter',
+                    },
+                     dataLabels: {
+                        formatter: (value, { seriesIndex, w }) => {
+                            const seriesValue = w.config.series[seriesIndex];
+                            const total = w.config.series.reduce((acc, val) => acc + val, 0);
+                            return `${(seriesValue / total * 100).toFixed(1)}%`;
+                        },
+                    },
+                });
+                salesByCategoryChart.render();
+            } else {
+                salesByCategoryChart.updateOptions({
+                    series: categorySalesData.map(item => item.sales),
+                    labels: categorySalesData.map(item => item.category),
+                });
+            }
+
+            if (!topSellingProductsChart) {
+                topSellingProductsChart = new ApexCharts(document.getElementById('top-products'), {
+                    chart: {
+                        type: 'bar',
+                        height: 300,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'Quantity Sold',
+                        data: topSellingProductsData.map(item => ({ x: item.product, y: item.quantity }))
+                    }],
+                    xaxis: {
+                        type: 'category',
+                         title: {
+                            text: 'Product',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Quantity Sold',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    colors: ['#f97316'], // Tailwind orange-500
+                    dataLabels: {
+                        enabled: true,
+                         style: {
+                            fontFamily: 'Inter',
+                          }
+                    },
+                    grid: {
+                        borderColor: '#e5e7eb', // Tailwind gray-200
+                        row: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                        column: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                    },
+                });
+                topSellingProductsChart.render();
+            } else {
+                topSellingProductsChart.updateOptions({
+                    series: [{
+                        name: 'Quantity Sold',
+                        data: topSellingProductsData.map(item => ({ x: item.product, y: item.quantity }))
+                    }],
+                    xaxis: {
+                        categories: topSellingProductsData.map(item => item.product)
+                    }
+                });
+            }
+
+            if (!salesByRegionChart) {
+                salesByRegionChart = new ApexCharts(document.getElementById('sales-by-region'), {
+                    chart: {
+                        type: 'bar',
+                        height: 300,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'Sales',
+                        data: regionSalesData.map(item => ({ x: item.region, y: item.sales }))
+                    }],
+                    xaxis: {
+                        type: 'category',
+                         title: {
+                            text: 'Region',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Sales (Units)',
+                             style: {
+                                fontFamily: 'Inter',
+                              }
+                        }
+                    },
+                    colors: ['#84cc16'], // Tailwind lime-500
+                    dataLabels: {
+                        enabled: true,
+                         style: {
+                            fontFamily: 'Inter',
+                          }
+                    },
+                    grid: {
+                        borderColor: '#e5e7eb', // Tailwind gray-200
+                        row: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                        column: {
+                            colors: ['#f9fafb', '#fff'], // Tailwind gray-50 and white
+                            opacity: 0.5
+                        },
+                    },
+                    tooltip: {
+                         y: {
+                            formatter: (value) => `${value}`
+                        }
+                    }
+                });
+                salesByRegionChart.render();
+            } else {
+                 salesByRegionChart.updateOptions({
+                    series: [{
+                        name: 'Sales',
+                        data: regionSalesData.map(item => ({ x: item.region, y: item.sales }))
+                    }],
+                    xaxis: {
+                        categories: regionSalesData.map(item => item.region)
+                    }
+                });
+            }
+        }
+
+        // Initial render
+        renderCharts(transactions, '', '', '');
+
+        // Event listeners for filtering
+        document.getElementById('store-filter').addEventListener('change', function() {
+            const storeFilter = this.value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            renderCharts(transactions, storeFilter, startDate, endDate);
+        });
+
+        document.getElementById('start-date').addEventListener('change', function() {
+            const storeFilter = document.getElementById('store-filter').value;
+            const startDate = this.value;
+            const endDate = document.getElementById('end-date').value;
+            renderCharts(transactions, storeFilter, startDate, endDate);
+        });
+
+        document.getElementById('end-date').addEventListener('change', function() {
+            const storeFilter = document.getElementById('store-filter').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = this.value;
+            renderCharts(transactions, storeFilter, startDate, endDate);
+        });
+    </script>
+</body>
+</html>
